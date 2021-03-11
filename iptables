@@ -1,0 +1,27 @@
+ 
+iptables -N syn_flood
+iptables -A INPUT -p tcp --syn -j syn_flood
+iptables -A syn_flood -m limit --limit 1/s --limit-burst 3 -j RETURN
+iptables -A syn_flood -j DROP
+iptables -A INPUT -p icmp -m limit --limit  1/s --limit-burst 1 -j ACCEPT
+iptables -A INPUT -p icmp -m limit --limit 1/s --limit-burst 1 -j LOG --log-prefix PING-DROP:
+iptables -A INPUT -p icmp -j DROP
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A OUTPUT -d DNSServer -p udp -dport 53 -j ACCEPT
+iptables -A INPUT -s DNSServer -p udp -sport 53 -j ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -I INPUT 2 -p tcp --match multiport --dports 49152:65535 -j ACCEPT
+iptables -A OUTPUT -t filter -p tcp --dport http -j ACCEPT
+iptables -A OUTPUT -t filter -p tcp --dport 53 -j ACCEPT
+iptables -A OUTPUT -t filter -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -t filter -p tcp --dport https -j ACCEPT
+iptables -A OUTPUT -t filter -p udp --dport https -j ACCEPT
+iptables -A OUTPUT -t filter -p tcp --dport 445 -j ACCEPT
+iptables -A OUTPUT -t filter -p tcp --dport 139 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -i eth0 -j ACCEPT
+iptables -A INPUT -p tcp --dport domain -i eth0 -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -p tcp --dport http -j ACCEPT
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
